@@ -11,7 +11,7 @@ Run your project's dev servers, workers and watchers from a list in the sidebar,
 
 ## Getting started
 
-1. Install Terminal Commands from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=peter-lewis.vscode-terminal-commands) for VS Code, or from [Open VSX](https://open-vsx.org/extension/peter-lewis/vscode-terminal-commands) for Cursor and other editors that use it. Or search for "Terminal Commands" in the editor's Extensions view.
+1. Install Terminal Commands from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=peter-lewis.terminal-commands) for VS Code, or from [Open VSX](https://open-vsx.org/extension/peter-lewis/terminal-commands) for Cursor and other editors that use it. Or search for "Terminal Commands" in the editor's Extensions view.
 2. Open your project, expand the **Terminal Commands** section at the bottom of the Explorer sidebar, and click **Create Config**. That creates `.vscode/terminal-commands.json`, filled in with the `package.json` scripts that start something long-running: `dev`, `start`, `serve` and `watch`, and variants like `dev:web`.
 3. Edit the list and save. Click a command to start it.
 
@@ -102,7 +102,7 @@ Cursor titles terminal tabs with the running process (`node`, `zsh`) rather than
 
 - **A command fails with exit code 127.** The shell couldn't find the program. Check that it's on your `PATH`, and keep in mind that aliases and shell functions aren't available.
 - **A command doesn't stop.** Some programs ignore Ctrl+C, or take a while to handle it. Press Stop again, or use **Kill Terminal**.
-- **Something else isn't right.** The **Terminal Commands** output channel (**View > Output**) logs what the extension does. For more detail, run **Developer: Set Log Level...**, choose Terminal Commands, then Debug. Please include the log when you [report a bug](https://github.com/peter-lewis/vscode-terminal-commands/issues).
+- **Something else isn't right.** The **Terminal Commands** output channel (**View > Output**) logs what the extension does. For more detail, run **Developer: Set Log Level...**, choose Terminal Commands, then Debug. Please include the log when you [report a bug](https://github.com/peter-lewis/terminal-commands/issues).
 
 ## Contributing
 

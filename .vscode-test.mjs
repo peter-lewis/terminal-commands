@@ -25,7 +25,7 @@ export default defineConfig({
     '--disable-workspace-trust',
     // The test profile has no extensions installed. Built-in Git would offer to open the parent repo.
     '--disable-extension=vscode.git',
-    '--log=peter-lewis.vscode-terminal-commands:debug',
+    '--log=peter-lewis.terminal-commands:debug',
   ],
   env,
   mocha: { ui: 'bdd', timeout: 60_000 },

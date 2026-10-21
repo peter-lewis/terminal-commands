@@ -4,7 +4,7 @@ Bug reports, ideas and pull requests are all welcome.
 
 ## Reporting a bug
 
-Open an [issue](https://github.com/peter-lewis/vscode-terminal-commands/issues) and include:
+Open an [issue](https://github.com/peter-lewis/terminal-commands/issues) and include:
 
 - your editor and its version (VS Code, Cursor, ...), your operating system, and your shell;
 - the config entry involved, if there is one;
@@ -22,7 +22,7 @@ pnpm run watch             # rebuild on change
 pnpm run typecheck
 pnpm test                  # unit tests (vitest)
 pnpm run test:integration  # integration tests in a real VS Code
-pnpm run package           # build vscode-terminal-commands-<version>.vsix
+pnpm run package           # build terminal-commands-<version>.vsix
 ```
 
 To try a change, open the repository in VS Code and press F5. That builds the extension and opens a second window with the extension loaded and `test/fixtures/workspace` open. After rebuilding, run **Developer: Reload Window** in that window.

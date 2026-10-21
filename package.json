@@ -1,17 +1,17 @@
 {
-  "name": "vscode-terminal-commands",
+  "name": "terminal-commands",
   "displayName": "Terminal Commands",
   "description": "Run your project's dev servers, workers and watchers from the sidebar, each in its own terminal. Define them in the repo, start them with one click, or have them start when the project opens.",
   "version": "0.1.0",
   "publisher": "peter-lewis",
   "license": "MIT",
-  "homepage": "https://github.com/peter-lewis/vscode-terminal-commands#readme",
+  "homepage": "https://github.com/peter-lewis/terminal-commands#readme",
   "bugs": {
-    "url": "https://github.com/peter-lewis/vscode-terminal-commands/issues"
+    "url": "https://github.com/peter-lewis/terminal-commands/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/peter-lewis/vscode-terminal-commands.git"
+    "url": "https://github.com/peter-lewis/terminal-commands.git"
   },
   "engines": {
     "vscode": "^1.93.0"

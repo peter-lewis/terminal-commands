@@ -1,6 +1,6 @@
 # Releasing
 
-Terminal Commands is published to the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=peter-lewis.vscode-terminal-commands), which VS Code uses, and to [Open VSX](https://open-vsx.org/extension/peter-lewis/vscode-terminal-commands), which Cursor and other editors that can't use Microsoft's marketplace use.
+Terminal Commands is published to the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=peter-lewis.terminal-commands), which VS Code uses, and to [Open VSX](https://open-vsx.org/extension/peter-lewis/terminal-commands), which Cursor and other editors that can't use Microsoft's marketplace use.
 
 Pushing a version tag runs the [Release workflow](.github/workflows/release.yml). It:
 
@@ -31,7 +31,7 @@ The repository must be public, because the stores load the README's images from 
 
 ### Visual Studio Marketplace
 
-1. Sign in to the [publisher management page](https://marketplace.visualstudio.com/manage) with a Microsoft account, and create a publisher with the ID `peter-lewis`, the `publisher` in `package.json`. If that ID is taken, choose another, and replace `peter-lewis.vscode-terminal-commands` and the store links throughout the repository to match.
+1. Sign in to the [publisher management page](https://marketplace.visualstudio.com/manage) with a Microsoft account, and create a publisher with the ID `peter-lewis`, the `publisher` in `package.json`. If that ID is taken, choose another, and replace `peter-lewis.terminal-commands` and the store links throughout the repository to match.
 2. Publish the first version by hand: choose **New extension** > **Visual Studio Code**, and upload the `.vsix` from the GitHub release, or one built with `pnpm run package`.
 
 ### Open VSX
@@ -46,7 +46,7 @@ The repository must be public, because the stores load the README's images from 
 
 4. In the repository's settings on GitHub, add the token as an Actions secret named `OVSX_PAT`. The Release workflow publishes with it.
 
-Once the first version is out, you can switch to [trusted publishing](https://github.com/eclipse/openvsx/wiki/Trusted-Publishing), which needs no stored token. On open-vsx.org, under **Settings** > **Trusted Publishers**, add a GitHub Actions publisher for `peter-lewis/vscode-terminal-commands` with the workflow `release.yml` and the environment `release`. Then delete the `OVSX_PAT` secret.
+Once the first version is out, you can switch to [trusted publishing](https://github.com/eclipse/openvsx/wiki/Trusted-Publishing), which needs no stored token. On open-vsx.org, under **Settings** > **Trusted Publishers**, add a GitHub Actions publisher for `peter-lewis/terminal-commands` with the workflow `release.yml` and the environment `release`. Then delete the `OVSX_PAT` secret.
 
 To have the extension shown as verified, [claim the namespace](https://github.com/eclipse/openvsx/wiki/Namespace-Access).
 
@@ -55,7 +55,7 @@ To have the extension shown as verified, [claim the namespace](https://github.co
 Personal access tokens for the Marketplace stop working on December 1, 2026, when Azure DevOps retires them (see [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)). Instead, the workflow signs in to Microsoft Entra ID as an app, through GitHub's OIDC, so there is no secret to store. To set that up:
 
 1. In the [Microsoft Entra admin center](https://entra.microsoft.com), register an application. Note its application (client) ID and directory (tenant) ID. An app registration doesn't need an Azure subscription.
-2. In the app's **Certificates & secrets** > **Federated credentials**, add a credential for the scenario **GitHub Actions deploying Azure resources**: organization `peter-lewis`, repository `vscode-terminal-commands`, entity type **Environment**, environment `release`.
+2. In the app's **Certificates & secrets** > **Federated credentials**, add a credential for the scenario **GitHub Actions deploying Azure resources**: organization `peter-lewis`, repository `terminal-commands`, entity type **Environment**, environment `release`.
 3. In the repository's settings on GitHub, add the Actions variables `AZURE_CLIENT_ID` and `AZURE_TENANT_ID`. Add them to the repository, not to the `release` environment: the workflow checks them to decide whether to run the Marketplace job.
 4. Push a release tag. The Marketplace job's **Show the identity's Marketplace ID** step prints an ID. Publishing fails, because that identity can't publish yet.
 5. On the [publisher management page](https://marketplace.visualstudio.com/manage), add that ID to the publisher's members with the **Contributor** role. Then re-run the failed job.
@@ -66,7 +66,7 @@ The `release` environment is created the first time the workflow runs. In **Sett
 
 ```sh
 pnpm run package
-pnpm exec ovsx publish vscode-terminal-commands-<version>.vsix -p <token>
+pnpm exec ovsx publish terminal-commands-<version>.vsix -p <token>
 ```
 
 Then upload the `.vsix` to the Marketplace as described above.

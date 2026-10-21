@@ -29,7 +29,7 @@ describe('Terminal Commands', () => {
   const start = (name: string) => vscode.commands.executeCommand('terminalCommands.start', name);
 
   before(async () => {
-    const extension = vscode.extensions.getExtension<TerminalCommandsApi>('peter-lewis.vscode-terminal-commands');
+    const extension = vscode.extensions.getExtension<TerminalCommandsApi>('peter-lewis.terminal-commands');
     assert.ok(extension, 'extension is installed');
     api = await extension.activate();
     await api.ready;
