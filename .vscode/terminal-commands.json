@@ -1,0 +1,7 @@
+{
+  // This repo's own commands, for working on the extension with the extension.
+  "commands": [
+    { "name": "watch", "command": "pnpm run watch" },
+    { "name": "unit tests", "command": "pnpm exec vitest" }
+  ]
+}

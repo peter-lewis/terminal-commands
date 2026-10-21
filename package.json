@@ -1,0 +1,347 @@
+{
+  "name": "vscode-terminal-commands",
+  "displayName": "Terminal Commands",
+  "description": "Run your project's dev servers, workers and watchers from the sidebar, each in its own terminal. Define them in the repo, start them with one click, or have them start when the project opens.",
+  "version": "0.1.0",
+  "publisher": "peter-lewis",
+  "license": "MIT",
+  "homepage": "https://github.com/peter-lewis/vscode-terminal-commands#readme",
+  "bugs": {
+    "url": "https://github.com/peter-lewis/vscode-terminal-commands/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peter-lewis/vscode-terminal-commands.git"
+  },
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "terminal",
+    "commands",
+    "dev server",
+    "monorepo",
+    "tasks",
+    "process manager",
+    "procfile",
+    "autostart",
+    "runner",
+    "scripts",
+    "watch"
+  ],
+  "icon": "assets/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "workspaceContains:.vscode/terminal-commands.json",
+    "onTaskType:terminalCommand"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Terminal Commands runs shell commands defined by the workspace, so it only runs in trusted workspaces."
+    },
+    "virtualWorkspaces": false
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "terminalCommands.start",
+        "title": "Start",
+        "category": "Terminal Commands",
+        "icon": "$(play)"
+      },
+      {
+        "command": "terminalCommands.stop",
+        "title": "Stop",
+        "category": "Terminal Commands",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "terminalCommands.restart",
+        "title": "Restart",
+        "category": "Terminal Commands",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "terminalCommands.showTerminal",
+        "title": "Show Terminal",
+        "category": "Terminal Commands",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "terminalCommands.kill",
+        "title": "Kill Terminal",
+        "category": "Terminal Commands",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "terminalCommands.edit",
+        "title": "Edit Command",
+        "category": "Terminal Commands",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "terminalCommands.open",
+        "title": "Open",
+        "category": "Terminal Commands"
+      },
+      {
+        "command": "terminalCommands.startAll",
+        "title": "Start All",
+        "category": "Terminal Commands",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "terminalCommands.stopAll",
+        "title": "Stop All",
+        "category": "Terminal Commands",
+        "icon": "$(stop-circle)"
+      },
+      {
+        "command": "terminalCommands.openConfig",
+        "title": "Open Config",
+        "category": "Terminal Commands",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "terminalCommands.resetAutoStartDecisions",
+        "title": "Reset Auto-Start Decisions",
+        "category": "Terminal Commands"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "terminalCommands",
+          "name": "Terminal Commands",
+          "icon": "$(terminal)",
+          "contextualTitle": "Terminal Commands"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "terminalCommands",
+        "contents": "Open a folder to define its commands.\n[Open Folder](command:vscode.openFolder)",
+        "when": "workbenchState == empty"
+      },
+      {
+        "view": "terminalCommands",
+        "contents": "Define this project's commands in .vscode/terminal-commands.json. Each command runs in its own terminal and can start automatically when the project opens.\n[Create Config](command:terminalCommands.openConfig)",
+        "when": "workbenchState != empty && terminalCommands.loaded && !terminalCommands.hasConfig"
+      },
+      {
+        "view": "terminalCommands",
+        "contents": "No commands defined yet.\n[Open Config](command:terminalCommands.openConfig)",
+        "when": "terminalCommands.loaded && terminalCommands.hasConfig"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "terminalCommands.startAll",
+          "when": "view == terminalCommands && terminalCommands.hasCommands",
+          "group": "navigation@1"
+        },
+        {
+          "command": "terminalCommands.stopAll",
+          "when": "view == terminalCommands && terminalCommands.hasCommands",
+          "group": "navigation@2"
+        },
+        {
+          "command": "terminalCommands.openConfig",
+          "when": "view == terminalCommands && workbenchState != empty",
+          "group": "navigation@3"
+        },
+        {
+          "command": "terminalCommands.resetAutoStartDecisions",
+          "when": "view == terminalCommands && workbenchState != empty",
+          "group": "1_autoStart"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "terminalCommands.start",
+          "when": "view == terminalCommands && viewItem =~ /^command:(stopped|failed)/",
+          "group": "inline@1"
+        },
+        {
+          "command": "terminalCommands.restart",
+          "when": "view == terminalCommands && viewItem =~ /^command:running/",
+          "group": "inline@1"
+        },
+        {
+          "command": "terminalCommands.stop",
+          "when": "view == terminalCommands && viewItem =~ /^command:(starting|running|stopping)/",
+          "group": "inline@2"
+        },
+        {
+          "command": "terminalCommands.start",
+          "when": "view == terminalCommands && viewItem =~ /^command:(stopped|failed)/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "terminalCommands.restart",
+          "when": "view == terminalCommands && viewItem =~ /^command:running/",
+          "group": "1_run@2"
+        },
+        {
+          "command": "terminalCommands.stop",
+          "when": "view == terminalCommands && viewItem =~ /^command:(starting|running|stopping)/",
+          "group": "1_run@3"
+        },
+        {
+          "command": "terminalCommands.showTerminal",
+          "when": "view == terminalCommands && viewItem =~ /^command:.*:terminal$/",
+          "group": "2_terminal@1"
+        },
+        {
+          "command": "terminalCommands.kill",
+          "when": "view == terminalCommands && viewItem =~ /^command:.*:terminal$/",
+          "group": "2_terminal@2"
+        },
+        {
+          "command": "terminalCommands.edit",
+          "when": "view == terminalCommands && viewItem =~ /^command:/",
+          "group": "3_config@1"
+        },
+        {
+          "command": "terminalCommands.openConfig",
+          "when": "view == terminalCommands && viewItem == folder",
+          "group": "inline@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "terminalCommands.open",
+          "when": "false"
+        },
+        {
+          "command": "terminalCommands.start",
+          "when": "terminalCommands.hasCommands"
+        },
+        {
+          "command": "terminalCommands.stop",
+          "when": "terminalCommands.hasCommands"
+        },
+        {
+          "command": "terminalCommands.restart",
+          "when": "terminalCommands.hasCommands"
+        },
+        {
+          "command": "terminalCommands.showTerminal",
+          "when": "terminalCommands.hasCommands"
+        },
+        {
+          "command": "terminalCommands.kill",
+          "when": "terminalCommands.hasCommands"
+        },
+        {
+          "command": "terminalCommands.edit",
+          "when": "terminalCommands.hasCommands"
+        },
+        {
+          "command": "terminalCommands.startAll",
+          "when": "terminalCommands.hasCommands"
+        },
+        {
+          "command": "terminalCommands.stopAll",
+          "when": "terminalCommands.hasCommands"
+        },
+        {
+          "command": "terminalCommands.openConfig",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "terminalCommands.resetAutoStartDecisions",
+          "when": "workbenchState != empty"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Terminal Commands",
+      "properties": {
+        "terminalCommands.autoStart": {
+          "type": "string",
+          "enum": [
+            "prompt",
+            "always",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Ask before auto-starting a workspace's commands, and ask again whenever its auto-start commands change.",
+            "Auto-start commands without asking.",
+            "Never auto-start commands."
+          ],
+          "default": "prompt",
+          "scope": "application",
+          "markdownDescription": "Controls whether commands marked `\"autoStart\": true` in `.vscode/terminal-commands.json` start when a workspace opens. This can only be set in user settings, so a repository can't opt itself in."
+        }
+      }
+    },
+    "taskDefinitions": [
+      {
+        "type": "terminalCommand",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of a command in .vscode/terminal-commands.json."
+          }
+        }
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "/.vscode/terminal-commands.json",
+        "url": "./schemas/terminal-commands.schema.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "jsonc",
+        "filenamePatterns": [
+          "**/.vscode/terminal-commands.json"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc -p . && tsc -p test/integration",
+    "test": "vitest run",
+    "test:integration": "node esbuild.mjs --tests && vscode-test",
+    "package": "vsce package --no-dependencies",
+    "vscode:prepublish": "node esbuild.mjs --production"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.20.5",
+    "@types/vscode": "1.93.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "mocha": "^12.0.3",
+    "ovsx": "^1.3.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "packageManager": "pnpm@11.21.0"
+}

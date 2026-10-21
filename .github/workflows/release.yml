@@ -1,0 +1,121 @@
+name: Release
+
+# Runs when a version tag such as v0.2.0 is pushed. The tag must match the version in package.json.
+# Publishing needs some one-time setup; see "Releasing" in CONTRIBUTING.md.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - name: Check that the tag matches package.json
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::The tag $GITHUB_REF_NAME doesn't match version $version in package.json."
+            exit 1
+          fi
+      - run: pnpm run typecheck
+      - run: pnpm test
+      - run: xvfb-run -a pnpm run test:integration
+      - run: pnpm run package
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vsix
+          path: '*.vsix'
+          if-no-files-found: error
+
+  github:
+    name: GitHub release
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+          path: vsix
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The release notes are this version's section of CHANGELOG.md.
+          awk -v heading="## ${GITHUB_REF_NAME#v}" '$0 == heading { found = 1; next } found && /^## / { exit } found' CHANGELOG.md > notes.md
+          gh release create "$GITHUB_REF_NAME" vsix/*.vsix --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+
+  open-vsx:
+    name: Open VSX
+    needs: package
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # Open VSX trusted publishing
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # This job can publish, so dependencies don't get to run install scripts. ovsx needs none.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+          path: vsix
+      - name: Publish
+        env:
+          # Without this secret, ovsx authenticates through trusted publishing instead.
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: pnpm exec ovsx publish vsix/*.vsix --skip-duplicate
+
+  marketplace:
+    name: VS Code Marketplace
+    needs: package
+    # Runs once publishing with Microsoft Entra ID is set up.
+    if: vars.AZURE_CLIENT_ID != ''
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # Microsoft Entra ID sign-in
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # This job can publish, so dependencies don't get to run install scripts. vsce needs none.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+          path: vsix
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          # vsce's token is scoped to the tenant, so there's no subscription to sign in to.
+          allow-no-subscriptions: true
+      - name: Show the identity's Marketplace ID
+        # The ID to add as a member of the Marketplace publisher.
+        run: az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource 499b84ac-1321-427f-aa17-267ca6975798 --query id -o tsv
+      - name: Publish
+        run: pnpm exec vsce publish --azure-credential --packagePath vsix/*.vsix --skip-duplicate

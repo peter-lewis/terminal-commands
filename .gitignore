@@ -1,0 +1,7 @@
+node_modules/
+dist/
+out/
+.vscode-test/
+*.vsix
+test/fixtures/workspace/env-cwd.out
+.DS_Store

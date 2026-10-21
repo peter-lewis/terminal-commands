@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // A task that refers to a configured command, and one that depends on it.
+    { "type": "terminalCommand", "name": "quick", "label": "quick via tasks.json" },
+    { "label": "after quick", "type": "shell", "command": "echo after", "dependsOn": [{ "type": "terminalCommand", "name": "env-cwd" }] }
+  ]
+}

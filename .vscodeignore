@@ -1,0 +1,10 @@
+# Package only what the extension needs at runtime and what the stores display. vsce rewrites the
+# README's relative image links to point at GitHub, so the images themselves stay out.
+**
+!dist/extension.js
+!schemas/*.json
+!assets/icon.png
+!README.md
+!CHANGELOG.md
+!LICENSE
+!ThirdPartyNotices.txt

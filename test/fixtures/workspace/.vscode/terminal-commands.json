@@ -1,0 +1,15 @@
+{
+  // Commands exercised by the integration tests.
+  "commands": [
+    { "name": "quick", "command": "echo quick-done" },
+    { "name": "fail", "command": "sh -c 'exit 3'" },
+    { "name": "long", "command": "sleep 600" },
+    { "name": "auto", "command": "sleep 300", "autoStart": true },
+    {
+      "name": "env-cwd",
+      "command": "printf '%s|%s' \"$PWD\" \"$TC_VALUE\" > ../env-cwd.out",
+      "cwd": "sub",
+      "env": { "TC_VALUE": "hello" },
+    },
+  ],
+}

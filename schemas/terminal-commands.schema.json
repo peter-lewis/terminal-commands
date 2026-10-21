@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Terminal Commands",
+  "description": "Project commands for the Terminal Commands extension. Each command runs in its own integrated terminal.",
+  "type": "object",
+  "allowComments": true,
+  "allowTrailingCommas": true,
+  "required": ["commands"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "commands": {
+      "type": "array",
+      "description": "The project's commands, in the order they are listed in the sidebar.",
+      "items": {
+        "$ref": "#/definitions/command"
+      }
+    }
+  },
+  "definitions": {
+    "command": {
+      "type": "object",
+      "required": ["command"],
+      "additionalProperties": false,
+      "defaultSnippets": [
+        {
+          "label": "New command",
+          "body": {
+            "name": "$1",
+            "command": "$2",
+            "autoStart": false
+          }
+        }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Label in the sidebar and name of the terminal. Must be unique. Defaults to the command line."
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Command line, run by your default shell, e.g. \"pnpm run dev:web\"."
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Working directory, relative to the workspace folder or absolute. Defaults to the workspace folder."
+        },
+        "env": {
+          "type": "object",
+          "description": "Environment variables to add to the inherited environment.",
+          "additionalProperties": {
+            "type": ["string", "number", "boolean"]
+          }
+        },
+        "autoStart": {
+          "type": "boolean",
+          "default": false,
+          "description": "Start the command when the project opens. You are asked to allow this the first time, and again whenever the auto-start commands change."
+        }
+      }
+    }
+  }
+}
