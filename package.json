@@ -2,7 +2,7 @@
   "name": "terminal-commands",
   "displayName": "Terminal Commands",
   "description": "Run your project's dev servers, workers and watchers from the sidebar, each in its own terminal. Define them in the repo, start them with one click, or have them start when the project opens.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "peter-lewis",
   "license": "MIT",
   "homepage": "https://github.com/peter-lewis/terminal-commands#readme",

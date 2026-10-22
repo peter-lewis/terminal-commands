@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - **Groups**: list commands in named groups, like everything one app needs while you work on it. The view lists the commands by group, with buttons to start and stop a whole group. Check a group to start it now and whenever the project opens. If its commands change, you're asked again.
 - **Config editor**: **Open Config** opens the config in a form, for adding, changing, reordering and deleting commands and groups. Changes are saved as you make them, and the rest of the file, comments included, stays as written. **Edit as JSON** switches to the file, and back.
