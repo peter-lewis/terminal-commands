@@ -51,7 +51,11 @@ describe('parseConfig', () => {
   });
 
   it('treats an empty file as having no commands', () => {
-    expect(parseConfig('')).toEqual({ commands: [], problems: ['The config must be an object with a "commands" array.'] });
+    expect(parseConfig('')).toEqual({
+      commands: [],
+      groups: [],
+      problems: ['The config must be an object with a "commands" array.'],
+    });
   });
 
   it('reports syntax errors with their line', () => {
@@ -113,5 +117,63 @@ describe('parseConfig', () => {
 
   it('allows a $schema property', () => {
     expect(parseConfig('{ "$schema": "./schema.json", "commands": [] }').problems).toEqual([]);
+  });
+});
+
+describe('parseConfig groups', () => {
+  const commands = `
+    { "name": "web", "command": "a" },
+    { "name": "api", "command": "b" },
+    { "name": "db", "command": "c" }`;
+
+  it('reads groups and their commands in the order listed', () => {
+    const { groups, problems } = parseConfig(`{
+      "commands": [${commands}],
+      "groups": [
+        { "name": "web", "commands": ["web", "api", "db"] },
+        { "name": " backend ", "commands": [" db ", "api"] },
+        { "name": "empty", "commands": [] }
+      ]
+    }`);
+    expect(problems).toEqual([]);
+    expect(groups).toEqual([
+      { name: 'web', commands: ['web', 'api', 'db'], offset: expect.any(Number) },
+      { name: 'backend', commands: ['db', 'api'], offset: expect.any(Number) },
+      { name: 'empty', commands: [], offset: expect.any(Number) },
+    ]);
+  });
+
+  it('skips invalid groups and unknown commands but keeps the rest', () => {
+    const { groups, problems } = parseConfig(`{
+      "commands": [${commands}, { "name": "broken", "command": "" }],
+      "groups": [
+        "web",
+        { "commands": ["web"] },
+        { "name": "no-commands" },
+        { "name": "bad-member", "commands": ["web", 1] },
+        { "name": "typo", "commands": ["wbe", "web", "web", "broken"], "color": "red" },
+        { "name": "typo", "commands": [] }
+      ]
+    }`);
+    expect(groups.map((group) => [group.name, group.commands])).toEqual([['typo', ['web']]]);
+    expect(problems).toEqual([
+      'commands[3] "broken": "command" must be a non-empty string.',
+      'groups[0]: must be an object.',
+      'groups[1]: "name" must be a non-empty string.',
+      'groups[2] "no-commands": "commands" must be an array of command names.',
+      'groups[3] "bad-member": "commands" must be an array of command names.',
+      'groups[4] "typo": unknown property "color".',
+      'groups[4] "typo": there is no command named "wbe".',
+      'groups[4] "typo": "web" is listed more than once.',
+      'groups[5] "typo": another group already has this name.',
+    ]);
+  });
+
+  it('reports groups that are not an array', () => {
+    expect(parseConfig('{ "commands": [], "groups": {} }')).toEqual({
+      commands: [],
+      groups: [],
+      problems: ['"groups" must be an array.'],
+    });
   });
 });

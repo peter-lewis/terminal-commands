@@ -17,9 +17,46 @@
       "items": {
         "$ref": "#/definitions/command"
       }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Named sets of commands, e.g. everything one app needs while you work on it. The sidebar lists the commands by group. A group's commands start together, and you can choose groups to start when the project opens.",
+      "items": {
+        "$ref": "#/definitions/group"
+      }
     }
   },
   "definitions": {
+    "group": {
+      "type": "object",
+      "required": ["name", "commands"],
+      "additionalProperties": false,
+      "defaultSnippets": [
+        {
+          "label": "New group",
+          "body": {
+            "name": "$1",
+            "commands": ["$2"]
+          }
+        }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Label in the sidebar. Must be unique among the groups."
+        },
+        "commands": {
+          "type": "array",
+          "description": "Names of the commands in the group, in the order to list them. A command can be in any number of groups.",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
     "command": {
       "type": "object",
       "required": ["command"],

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { CONFIG_PATH, parseConfig, type CommandDefinition } from './config';
+import { CONFIG_PATH, parseConfig, type CommandDefinition, type GroupDefinition } from './config';
 
 /** The config of one workspace folder. */
 export interface FolderConfig {
@@ -8,6 +8,7 @@ export interface FolderConfig {
   /** Whether the folder has a config file at all. */
   readonly exists: boolean;
   readonly commands: readonly CommandDefinition[];
+  readonly groups: readonly GroupDefinition[];
   readonly problems: readonly string[];
 }
 
@@ -32,6 +33,12 @@ export function targetsOf(config: FolderConfig): CommandTarget[] {
     config,
     definition,
   }));
+}
+
+/** The commands of a group, in the group's order. */
+export function groupTargets(config: FolderConfig, group: GroupDefinition): CommandTarget[] {
+  const targets = targetsOf(config);
+  return group.commands.flatMap((name) => targets.find((target) => target.definition.name === name) ?? []);
 }
 
 /** Loads the config of every workspace folder and keeps it in sync with the files on disk. */
@@ -118,6 +125,6 @@ async function readFolderConfig(folder: vscode.WorkspaceFolder): Promise<FolderC
       () => false,
     );
     const problems = exists ? [`Couldn't read ${CONFIG_PATH}: ${error instanceof Error ? error.message : String(error)}`] : [];
-    return { folder, configUri, exists, commands: [], problems };
+    return { folder, configUri, exists, commands: [], groups: [], problems };
   }
 }

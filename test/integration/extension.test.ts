@@ -178,6 +178,31 @@ describe('Terminal Commands', () => {
     await waitForStatus('long', 'stopped');
   });
 
+  it('lists the groups', () => {
+    assert.deepEqual(api.groupNames(), ['servers', 'checks']);
+    assert.deepEqual(api.autoStartGroupNames(), []);
+  });
+
+  it('starts and stops a group', async () => {
+    await vscode.commands.executeCommand('terminalCommands.startGroup', 'servers');
+    await waitForStatus('long', 'running');
+    await waitForStatus('auto', 'running');
+    assert.equal(status('quick'), 'stopped');
+    await vscode.commands.executeCommand('terminalCommands.stopGroup', 'servers');
+    await waitForStatus('long', 'stopped');
+    await waitForStatus('auto', 'stopped');
+  });
+
+  it('starts a group when it is chosen to auto-start, and leaves it running when it no longer is', async () => {
+    await vscode.commands.executeCommand('terminalCommands.chooseAutoStartGroups', ['servers']);
+    assert.deepEqual(api.autoStartGroupNames(), ['servers']);
+    await waitForStatus('long', 'running');
+    await vscode.commands.executeCommand('terminalCommands.chooseAutoStartGroups', []);
+    assert.deepEqual(api.autoStartGroupNames(), []);
+    await sleep(500);
+    assert.equal(status('long'), 'running');
+  });
+
   it('offers the commands as tasks and tracks runs started from them', async () => {
     const tasks = await vscode.tasks.fetchTasks({ type: 'terminalCommand' });
     // tasks.json customizes "quick" (see the fixture), which renames it.
@@ -199,6 +224,28 @@ describe('Terminal Commands', () => {
     const dependent = (await vscode.tasks.fetchTasks()).find((task) => task.name === 'after quick')!;
     await vscode.tasks.executeTask(dependent);
     await waitFor(() => fs.existsSync(envCwdOutput), 'the dependency to run');
+  });
+
+  it('opens the config in the config editor, and as JSON', async () => {
+    const activeInput = () => vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+    try {
+      await vscode.commands.executeCommand('terminalCommands.openConfig');
+      await waitFor(() => activeInput() instanceof vscode.TabInputCustom, 'the config editor to open');
+      const input = activeInput() as vscode.TabInputCustom;
+      assert.equal(input.viewType, 'terminalCommands.configEditor');
+      assert.equal(input.uri.fsPath, configPath);
+
+      // Switching between the form and the JSON happens in place.
+      await vscode.commands.executeCommand('terminalCommands.openConfigJson');
+      await waitFor(() => activeInput() instanceof vscode.TabInputText, 'the config to open as JSON');
+      assert.equal((activeInput() as vscode.TabInputText).uri.fsPath, configPath);
+      assert.equal(vscode.window.tabGroups.activeTabGroup.tabs.length, 1);
+      await vscode.commands.executeCommand('terminalCommands.openConfigUi', vscode.Uri.file(configPath));
+      await waitFor(() => activeInput() instanceof vscode.TabInputCustom, 'the config editor to open again');
+      await waitFor(() => vscode.window.tabGroups.activeTabGroup.tabs.length === 1, 'the JSON tab to close');
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    }
   });
 
   it('reloads when the config file changes', async () => {

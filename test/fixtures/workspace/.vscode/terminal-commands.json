@@ -12,4 +12,8 @@
       "env": { "TC_VALUE": "hello" },
     },
   ],
+  "groups": [
+    { "name": "servers", "commands": ["long", "auto"] },
+    { "name": "checks", "commands": ["quick", "fail"] },
+  ],
 }

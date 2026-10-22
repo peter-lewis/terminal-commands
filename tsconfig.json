@@ -15,5 +15,7 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "test/unit", "vitest.config.mts"]
+  "include": ["src", "test/unit", "vitest.config.mts"],
+  // The config editor's webview runs in a browser; src/webview/tsconfig.json checks it.
+  "exclude": ["src/webview"]
 }

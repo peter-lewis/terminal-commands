@@ -17,14 +17,25 @@ export interface CommandDefinition {
   readonly offset: number;
 }
 
+/** A named set of commands, which can be started together and chosen to auto-start. */
+export interface GroupDefinition {
+  readonly name: string;
+  /** Names of the group's commands, in the order listed. Names that match no command are left out. */
+  readonly commands: readonly string[];
+  /** Offset of the group's entry in the config text. */
+  readonly offset: number;
+}
+
 export interface ParsedConfig {
   readonly commands: readonly CommandDefinition[];
+  readonly groups: readonly GroupDefinition[];
   /** Human-readable reasons the config, or some of its entries, were rejected. */
   readonly problems: readonly string[];
 }
 
-const ROOT_PROPERTIES = new Set(['$schema', 'commands']);
+const ROOT_PROPERTIES = new Set(['$schema', 'commands', 'groups']);
 const COMMAND_PROPERTIES = new Set(['name', 'command', 'cwd', 'env', 'autoStart']);
+const GROUP_PROPERTIES = new Set(['name', 'commands']);
 
 /**
  * Parses the text of a config file (JSON with comments). Invalid entries are skipped and reported in
@@ -37,10 +48,14 @@ export function parseConfig(text: string): ParsedConfig {
 
   if (errors.length > 0) {
     const [first] = errors;
-    return { commands: [], problems: [`Invalid JSON on line ${lineAt(source, first.offset)}: ${printParseErrorCode(first.error)}`] };
+    return {
+      commands: [],
+      groups: [],
+      problems: [`Invalid JSON on line ${lineAt(source, first.offset)}: ${printParseErrorCode(first.error)}`],
+    };
   }
   if (!root || root.type !== 'object') {
-    return { commands: [], problems: ['The config must be an object with a "commands" array.'] };
+    return { commands: [], groups: [], problems: ['The config must be an object with a "commands" array.'] };
   }
 
   const problems: string[] = [];
@@ -50,16 +65,23 @@ export function parseConfig(text: string): ParsedConfig {
   }
 
   const commandsNode = rootProperties.get('commands');
-  if (!commandsNode) return { commands: [], problems: [...problems, 'Missing the "commands" array.'] };
-  if (commandsNode.type !== 'array') return { commands: [], problems: [...problems, '"commands" must be an array.'] };
+  if (!commandsNode) return { commands: [], groups: [], problems: [...problems, 'Missing the "commands" array.'] };
+  if (commandsNode.type !== 'array') {
+    return { commands: [], groups: [], problems: [...problems, '"commands" must be an array.'] };
+  }
 
   const commands: CommandDefinition[] = [];
   const names = new Set<string>();
+  // Names of entries skipped for their own problems. Groups can list them without a second complaint.
+  const rejected = new Set<string>();
   for (const [index, entry] of (commandsNode.children ?? []).entries()) {
     const result = parseCommand(entry);
     const label = result.name ? `commands[${index}] "${result.name}"` : `commands[${index}]`;
     problems.push(...result.problems.map((problem) => `${label}: ${problem}`));
-    if (!result.command) continue;
+    if (!result.command) {
+      if (result.name) rejected.add(result.name);
+      continue;
+    }
     if (names.has(result.command.name)) {
       problems.push(`${label}: another command already has this name.`);
       continue;
@@ -67,7 +89,25 @@ export function parseConfig(text: string): ParsedConfig {
     names.add(result.command.name);
     commands.push(result.command);
   }
-  return { commands, problems };
+
+  const groupsNode = rootProperties.get('groups');
+  if (!groupsNode) return { commands, groups: [], problems };
+  if (groupsNode.type !== 'array') return { commands, groups: [], problems: [...problems, '"groups" must be an array.'] };
+  const groups: GroupDefinition[] = [];
+  const groupNames = new Set<string>();
+  for (const [index, entry] of (groupsNode.children ?? []).entries()) {
+    const result = parseGroup(entry, names, rejected);
+    const label = result.name ? `groups[${index}] "${result.name}"` : `groups[${index}]`;
+    problems.push(...result.problems.map((problem) => `${label}: ${problem}`));
+    if (!result.group) continue;
+    if (groupNames.has(result.group.name)) {
+      problems.push(`${label}: another group already has this name.`);
+      continue;
+    }
+    groupNames.add(result.group.name);
+    groups.push(result.group);
+  }
+  return { commands, groups, problems };
 }
 
 interface CommandResult {
@@ -123,6 +163,43 @@ function parseCommand(entry: Node): CommandResult {
       offset: entry.offset,
     },
   };
+}
+
+interface GroupResult {
+  /** Present when the entry is usable. */
+  readonly group?: GroupDefinition;
+  /** Best-effort name, for labelling problems. */
+  readonly name?: string;
+  readonly problems: readonly string[];
+}
+
+function parseGroup(entry: Node, commandNames: ReadonlySet<string>, rejected: ReadonlySet<string>): GroupResult {
+  if (entry.type !== 'object') return { problems: ['must be an object.'] };
+
+  const properties = propertiesOf(entry);
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  for (const key of properties.keys()) {
+    if (!GROUP_PROPERTIES.has(key)) warnings.push(`unknown property "${key}".`);
+  }
+  const nameNode = properties.get('name');
+  const rawName: unknown = nameNode && getNodeValue(nameNode);
+  const name = typeof rawName === 'string' ? rawName.trim() || undefined : undefined;
+  if (name === undefined) errors.push('"name" must be a non-empty string.');
+  const membersNode = properties.get('commands');
+  const members: unknown = membersNode && getNodeValue(membersNode);
+  const memberNames = Array.isArray(members) && members.every((member) => typeof member === 'string') ? members : undefined;
+  if (!memberNames) errors.push('"commands" must be an array of command names.');
+  if (errors.length > 0 || name === undefined || !memberNames) return { name, problems: [...errors, ...warnings] };
+
+  // An unknown name leaves the rest of the group usable, like an invalid entry in "commands".
+  const commands: string[] = [];
+  for (const member of memberNames.map((memberName) => memberName.trim())) {
+    if (commands.includes(member)) warnings.push(`"${member}" is listed more than once.`);
+    else if (commandNames.has(member)) commands.push(member);
+    else if (!rejected.has(member)) warnings.push(`there is no command named "${member}".`);
+  }
+  return { name, problems: warnings, group: { name, commands, offset: entry.offset } };
 }
 
 function parseEnv(raw: unknown, errors: string[]): Record<string, string> {

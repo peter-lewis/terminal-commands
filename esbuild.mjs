@@ -19,7 +19,19 @@ const common = {
   logLevel: 'info',
 };
 
-const builds = [{ ...common, entryPoints: ['src/extension.ts'], outfile: 'dist/extension.js' }];
+const builds = [
+  { ...common, entryPoints: ['src/extension.ts'], outfile: 'dist/extension.js' },
+  // The config editor's form, which runs in a webview. Its stylesheet comes out as dist/webview.css.
+  {
+    ...common,
+    entryPoints: ['src/webview/main.ts'],
+    outfile: 'dist/webview.js',
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2022',
+    external: [],
+  },
+];
 if (tests) {
   const testFiles = readdirSync('test/integration').filter((file) => file.endsWith('.ts') && !file.endsWith('.d.ts'));
   builds.push({

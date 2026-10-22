@@ -108,10 +108,39 @@
         "icon": "$(stop-circle)"
       },
       {
+        "command": "terminalCommands.startGroup",
+        "title": "Start Group",
+        "category": "Terminal Commands",
+        "icon": "$(play)"
+      },
+      {
+        "command": "terminalCommands.stopGroup",
+        "title": "Stop Group",
+        "category": "Terminal Commands",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "terminalCommands.chooseAutoStartGroups",
+        "title": "Choose Auto-Start Groups...",
+        "category": "Terminal Commands"
+      },
+      {
         "command": "terminalCommands.openConfig",
         "title": "Open Config",
         "category": "Terminal Commands",
         "icon": "$(gear)"
+      },
+      {
+        "command": "terminalCommands.openConfigJson",
+        "title": "Open Config (JSON)",
+        "category": "Terminal Commands",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "terminalCommands.openConfigUi",
+        "title": "Open Config (UI)",
+        "category": "Terminal Commands",
+        "icon": "$(go-to-file)"
       },
       {
         "command": "terminalCommands.resetAutoStartDecisions",
@@ -129,6 +158,18 @@
         }
       ]
     },
+    "customEditors": [
+      {
+        "viewType": "terminalCommands.configEditor",
+        "displayName": "Terminal Commands Config Editor",
+        "selector": [
+          {
+            "filenamePattern": "**/.vscode/terminal-commands.json"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
     "viewsWelcome": [
       {
         "view": "terminalCommands",
@@ -164,9 +205,19 @@
           "group": "navigation@3"
         },
         {
+          "command": "terminalCommands.chooseAutoStartGroups",
+          "when": "view == terminalCommands && terminalCommands.hasGroups",
+          "group": "1_autoStart@1"
+        },
+        {
           "command": "terminalCommands.resetAutoStartDecisions",
           "when": "view == terminalCommands && workbenchState != empty",
-          "group": "1_autoStart"
+          "group": "1_autoStart@2"
+        },
+        {
+          "command": "terminalCommands.openConfigJson",
+          "when": "view == terminalCommands && workbenchState != empty",
+          "group": "2_config@1"
         }
       ],
       "view/item/context": [
@@ -216,6 +267,26 @@
           "group": "3_config@1"
         },
         {
+          "command": "terminalCommands.startGroup",
+          "when": "view == terminalCommands && viewItem =~ /^group.*:canStart/",
+          "group": "inline@1"
+        },
+        {
+          "command": "terminalCommands.stopGroup",
+          "when": "view == terminalCommands && viewItem =~ /^group.*:canStop/",
+          "group": "inline@2"
+        },
+        {
+          "command": "terminalCommands.startGroup",
+          "when": "view == terminalCommands && viewItem =~ /^group.*:canStart/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "terminalCommands.stopGroup",
+          "when": "view == terminalCommands && viewItem =~ /^group.*:canStop/",
+          "group": "1_run@2"
+        },
+        {
           "command": "terminalCommands.openConfig",
           "when": "view == terminalCommands && viewItem == folder",
           "group": "inline@1"
@@ -259,12 +330,44 @@
           "when": "terminalCommands.hasCommands"
         },
         {
+          "command": "terminalCommands.startGroup",
+          "when": "terminalCommands.hasGroups"
+        },
+        {
+          "command": "terminalCommands.stopGroup",
+          "when": "terminalCommands.hasGroups"
+        },
+        {
+          "command": "terminalCommands.chooseAutoStartGroups",
+          "when": "terminalCommands.hasGroups"
+        },
+        {
           "command": "terminalCommands.openConfig",
           "when": "workbenchState != empty"
         },
         {
+          "command": "terminalCommands.openConfigJson",
+          "when": "workbenchState != empty"
+        },
+        {
+          "command": "terminalCommands.openConfigUi",
+          "when": "false"
+        },
+        {
           "command": "terminalCommands.resetAutoStartDecisions",
           "when": "workbenchState != empty"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "terminalCommands.openConfigJson",
+          "when": "activeCustomEditorId == terminalCommands.configEditor",
+          "group": "navigation"
+        },
+        {
+          "command": "terminalCommands.openConfigUi",
+          "when": "activeEditor == workbench.editors.files.textFileEditor && resourcePath =~ /\\.vscode[\\/\\\\]terminal-commands\\.json$/",
+          "group": "navigation"
         }
       ]
     },
@@ -279,13 +382,13 @@
             "never"
           ],
           "enumDescriptions": [
-            "Ask before auto-starting a workspace's commands, and ask again whenever its auto-start commands change.",
-            "Auto-start commands without asking.",
-            "Never auto-start commands."
+            "Ask before auto-starting a workspace's commands, and ask again whenever they change. Checking a group in the sidebar counts as allowing it.",
+            "Auto-start commands and checked groups without asking.",
+            "Never auto-start anything, including checked groups."
           ],
           "default": "prompt",
           "scope": "application",
-          "markdownDescription": "Controls whether commands marked `\"autoStart\": true` in `.vscode/terminal-commands.json` start when a workspace opens. This can only be set in user settings, so a repository can't opt itself in."
+          "markdownDescription": "Controls whether the commands marked `\"autoStart\": true` in `.vscode/terminal-commands.json`, and the groups you've checked in the sidebar, start when a workspace opens. This can only be set in user settings, so a repository can't opt itself in."
         }
       }
     },
@@ -321,7 +424,7 @@
   "scripts": {
     "build": "node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
-    "typecheck": "tsc -p . && tsc -p test/integration",
+    "typecheck": "tsc -p . && tsc -p src/webview && tsc -p test/integration",
     "test": "vitest run",
     "test:integration": "node esbuild.mjs --tests && vscode-test",
     "package": "vsce package --no-dependencies",

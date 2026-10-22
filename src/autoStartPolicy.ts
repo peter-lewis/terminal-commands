@@ -12,13 +12,12 @@ export interface AutoStartDecision {
 }
 
 /**
- * Identifies exactly what auto-start would run. Any change to what runs, where, or with which
- * environment produces a new fingerprint, which invalidates an earlier decision (like `direnv allow`).
- * Cosmetic fields and command order don't count.
+ * Identifies exactly what a set of commands would run when auto-started. Any change to what runs, where,
+ * or with which environment produces a new fingerprint, which invalidates an earlier decision (like
+ * `direnv allow`). Cosmetic fields and command order don't count.
  */
 export function autoStartFingerprint(commands: readonly CommandDefinition[]): string {
   const relevant = commands
-    .filter((command) => command.autoStart)
     .map((command) => ({
       name: command.name,
       command: command.command,

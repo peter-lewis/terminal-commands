@@ -2,28 +2,35 @@
 
 Run your project's dev servers, workers and watchers from a list in the sidebar, each in its own terminal. The list lives in the repo, so everyone who opens the project gets the same commands, and the ones you always need can start by themselves when it opens.
 
-![The Terminal Commands view in the Explorer, listing a project's commands with their status, and the terminal of one of them in the panel](images/screenshot.png)
+![The Terminal Commands view in the Explorer, listing a project's commands by group with their status, the config editor open on the right, and the terminal of one of the commands in the panel](images/screenshot.png)
 
 - **One click** starts, stops or restarts a command. The view shows whether each one is running, stopped, or failed and with which exit code.
 - **A terminal per command**, which keeps the output after the command exits.
 - **Auto-start** the commands you always need when the project opens. You're asked first.
+- **Groups** gather what one app needs, like its dev server, the API and the database, so they start together. Check a group, and it starts whenever you open the project.
+- **A config editor** to add and change commands in a form. Or edit the JSON, with validation and completions.
 - Works in **VS Code** and **Cursor**.
 
 ## Getting started
 
 1. Install Terminal Commands from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=peter-lewis.terminal-commands) for VS Code, or from [Open VSX](https://open-vsx.org/extension/peter-lewis/terminal-commands) for Cursor and other editors that use it. Or search for "Terminal Commands" in the editor's Extensions view.
-2. Open your project, expand the **Terminal Commands** section at the bottom of the Explorer sidebar, and click **Create Config**. That creates `.vscode/terminal-commands.json`, filled in with the `package.json` scripts that start something long-running: `dev`, `start`, `serve` and `watch`, and variants like `dev:web`.
-3. Edit the list and save. Click a command to start it.
+2. Open your project, expand the **Terminal Commands** section at the bottom of the Explorer sidebar, and click **Create Config**. That creates `.vscode/terminal-commands.json`, filled in with the `package.json` scripts that start something long-running: `dev`, `start`, `serve` and `watch`, and variants like `dev:web`, and opens it in the config editor.
+3. Add or change commands, and group them. Click a command in the sidebar to start it.
 
 A config for a monorepo might look like this:
 
 ```jsonc
 {
   "commands": [
-    { "name": "web", "command": "pnpm --filter web dev", "autoStart": true },
+    { "name": "web", "command": "pnpm --filter web dev" },
+    { "name": "admin", "command": "pnpm --filter admin dev" },
     { "name": "api", "command": "pnpm --filter api dev", "autoStart": true },
     { "name": "worker", "command": "pnpm run dev", "cwd": "services/worker" },
     { "name": "storybook", "command": "pnpm run storybook", "env": { "PORT": 6006 } }
+  ],
+  "groups": [
+    { "name": "web", "commands": ["web", "api"] },
+    { "name": "admin", "commands": ["admin", "api", "worker"] }
   ]
 }
 ```
@@ -32,7 +39,7 @@ Commit the file to share the commands with everyone who works on the project.
 
 ## The config file
 
-`.vscode/terminal-commands.json` has a `commands` array, with an entry for each command. The file is JSON with comments. The editor validates it and suggests fields as you type.
+`.vscode/terminal-commands.json` has a `commands` array, with an entry for each command, and optionally a `groups` array (see [Groups](#groups)). You can edit it in the [config editor](#the-config-editor), or as JSON with comments, which the editor validates and completes as you type.
 
 | Field       | Required | Description                                                                                                          |
 | ----------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
@@ -44,12 +51,48 @@ Commit the file to share the commands with everyone who works on the project.
 
 Changes take effect when you save. An entry with a mistake is skipped, and the problem is listed at the top of the view; click it to open the config. In a multi-root workspace, each folder can have a config of its own, and the view groups the commands by folder.
 
+## Groups
+
+A group is a set of commands to start together, like everything one app needs while you work on it. Define each command once, under `commands`, and list it in as many groups as need it:
+
+```jsonc
+"groups": [
+  { "name": "web", "commands": ["web", "api"] },
+  { "name": "admin", "commands": ["admin", "api", "worker"] }
+]
+```
+
+| Field      | Required | Description                                                      |
+| ---------- | -------- | ---------------------------------------------------------------- |
+| `name`     | yes      | Label in the sidebar. Must be unique among the groups.           |
+| `commands` | yes      | Names of the commands in the group, in the order to list them.   |
+
+If one app needs a command run differently, say the API with debug logging, add that as a command of its own, with its own name, and put it in that app's group:
+
+```jsonc
+{ "name": "api (debug)", "command": "pnpm --filter api dev", "env": { "DEBUG": "api:*" } }
+```
+
+The view lists the commands by group, and those in no group under **Other Commands**. A command in several groups is listed in each, but it's still one command, with one terminal.
+
+- Hover over a group for **Start Group** and **Stop Group**.
+- **Check a group** to start it now, and whenever you open the project. Check several to start them all. Which groups you check is your choice alone: it's remembered for the workspace on your machine, not written to the config, so everyone on a team can work on a different app.
+
+## The config editor
+
+**Open Config**, the gear in the view's title bar, opens the config in a form. So does **Edit Command**, at the command you picked. Changes are saved as you make them, and the rest of the file, comments included, stays the way you wrote it.
+
+- Click a command or a group to edit it. Hover over one to move it up or down, or to delete it.
+- **Add Command** and **Add Group** add new ones. A new command can go into groups straight away.
+- **Edit as JSON**, or the button in the editor's title bar, switches to the JSON, and the same button in the JSON's title bar switches back. **Open Config (JSON)**, in the view's `...` menu, opens the JSON directly.
+
 ## Using the view
 
 The **Terminal Commands** view is part of the Explorer sidebar. The first time you open a project that has commands, the view expands by itself. After that, it stays the way you leave it.
 
 - **Click** a command to show its terminal, or to start it if it has none.
-- Hover over a command for **Start**, **Stop** and **Restart**. Right-click it for **Show Terminal**, **Kill Terminal**, and **Edit Command**, which jumps to its entry in the config.
+- Hover over a command for **Start**, **Stop** and **Restart**. Right-click it for **Show Terminal**, **Kill Terminal**, and **Edit Command**, which opens it in the config editor.
+- Hover over a group for **Start Group** and **Stop Group**, and check it to start it whenever the project opens.
 - The view's title bar has **Start All**, **Stop All** and **Open Config**, and shows how many commands are running, e.g. `3/5`.
 
 The status bar shows the same count, plus the number of failed commands if there are any. Click it to open the view.
@@ -61,7 +104,7 @@ Every action is also in the Command Palette, under "Terminal Commands". To bind 
 [{ "key": "ctrl+alt+r", "command": "terminalCommands.restart", "args": "api" }]
 ```
 
-That works for `terminalCommands.start`, `stop`, `restart`, `showTerminal`, `kill` and `edit`. Without a name, they ask which command you mean.
+That works for `terminalCommands.start`, `stop`, `restart`, `showTerminal`, `kill` and `edit`, and with a group's name for `terminalCommands.startGroup` and `stopGroup`. Without a name, they ask which one you mean.
 
 ## How commands run
 
@@ -76,11 +119,12 @@ Each command runs as a VS Code task, in a terminal of its own, through your defa
 
 ## Auto-start
 
-Commands with `"autoStart": true` start when the project opens. A config in a repository can run anything on your machine, so:
+Two things start when the project opens: the commands with `"autoStart": true`, for everyone who opens the project, and the [groups](#groups) you've checked, for you. A config in a repository can run anything on your machine, so:
 
 - The extension only runs in [trusted workspaces](https://code.visualstudio.com/docs/editor/workspace-trust).
-- The first time, it asks before auto-starting a workspace's commands, and lists them. It asks again whenever what would auto-start changes, like `direnv allow`: a command line, working directory or environment variable, or which commands auto-start. Renaming or reordering the other commands doesn't count.
-- **Terminal Commands: Reset Auto-Start Decisions** forgets your answers for the current workspace.
+- The first time, it asks before auto-starting a workspace's `autoStart` commands, and lists them. It asks again whenever what would auto-start changes, like `direnv allow`: a command line, working directory or environment variable, or which commands auto-start. Renaming or reordering the other commands doesn't count.
+- Checking a group counts as allowing its commands as they are. If they change, say after a `git pull`, it asks again before starting the group. Declining unchecks the group.
+- **Terminal Commands: Reset Auto-Start Decisions** forgets your answers for the current workspace, and unchecks its groups.
 
 Starting a command yourself never asks. Hover over a command to see what it runs.
 

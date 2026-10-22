@@ -31,18 +31,22 @@ The repository has a Terminal Commands config of its own, so with the extension 
 
 ### Where things are
 
-| Path                       | Contents                                                                                    |
-| -------------------------- | ------------------------------------------------------------------------------------------- |
-| `src/extension.ts`         | Activation. Connects the pieces and registers the commands, the view and the task provider. |
-| `src/config.ts`            | Parses and validates `.vscode/terminal-commands.json`.                                      |
-| `src/configStore.ts`       | Loads each workspace folder's config, and reloads it when the file changes.                 |
-| `src/commandRunner.ts`     | Runs the commands as tasks, and tracks their status from the task events.                   |
-| `src/commandTree.ts`       | The Terminal Commands view.                                                                 |
-| `src/autoStartPolicy.ts`   | Decides whether to auto-start a workspace's commands, ask first, or skip them.              |
-| `src/scaffold.ts`          | The contents of a new config.                                                               |
-| `schemas/`                 | The config's JSON schema, which the editor uses for validation and completions.             |
-| `test/unit/`               | Unit tests for the parts that don't need VS Code.                                           |
-| `test/integration/`        | Tests that run the extension in VS Code, against the workspace in `test/fixtures/`.         |
+| Path                     | Contents                                                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `src/extension.ts`       | Activation. Connects the pieces and registers the commands, the view, the task provider and the config editor. |
+| `src/config.ts`          | Parses and validates `.vscode/terminal-commands.json`.                                                         |
+| `src/configStore.ts`     | Loads each workspace folder's config, and reloads it when the file changes.                                    |
+| `src/commandRunner.ts`   | Runs the commands as tasks, and tracks their status from the task events.                                      |
+| `src/commandTree.ts`     | The Terminal Commands view, which lists the commands by group.                                                 |
+| `src/autoStartPolicy.ts` | Decides whether to auto-start a workspace's commands, ask first, or skip them.                                 |
+| `src/scaffold.ts`        | The contents of a new config.                                                                                  |
+| `src/configEditor.ts`    | The config editor: shows the form, and saves the changes made in it.                                           |
+| `src/configDocument.ts`  | What the form shows, and how its changes are made to the JSON, keeping the rest of the file as written.        |
+| `src/editorProtocol.ts`  | The messages between the config editor and its form.                                                           |
+| `src/webview/`           | The form, which runs in a webview. esbuild bundles it into `dist/webview.js` and `dist/webview.css`.           |
+| `schemas/`               | The config's JSON schema, which the editor uses for validation and completions.                                |
+| `test/unit/`             | Unit tests for the parts that don't need VS Code.                                                              |
+| `test/integration/`      | Tests that run the extension in VS Code, against the workspace in `test/fixtures/`.                            |
 
 ### Integration tests
 

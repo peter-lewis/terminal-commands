@@ -2,6 +2,8 @@
 # README's relative image links to point at GitHub, so the images themselves stay out.
 **
 !dist/extension.js
+!dist/webview.js
+!dist/webview.css
 !schemas/*.json
 !assets/icon.png
 !README.md
